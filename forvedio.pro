@@ -27,13 +27,19 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp
-
 HEADERS += \
         mainwindow.h
-
 FORMS += \
         mainwindow.ui
-
+INCLUDEPATH+=../ffmpeglib/include
+LIBS += ../ffmpeglib/lib/avcodec.lib\
+        ../dev/lib/avdevice.lib\
+        ../dev/lib/avfilter.lib\
+        ../dev/lib/avformat.lib\
+        ../dev/lib/avutil.lib\
+        ../dev/lib/postproc.lib\
+        ../dev/lib/swresample.lib\
+        ../dev/lib/swscale.lib
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
