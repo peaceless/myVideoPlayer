@@ -31,15 +31,15 @@ HEADERS += \
         mainwindow.h
 FORMS += \
         mainwindow.ui
-INCLUDEPATH+=../ffmpeglib/include
-LIBS += ../ffmpeglib/lib/avcodec.lib\
-        ../dev/lib/avdevice.lib\
-        ../dev/lib/avfilter.lib\
-        ../dev/lib/avformat.lib\
-        ../dev/lib/avutil.lib\
-        ../dev/lib/postproc.lib\
-        ../dev/lib/swresample.lib\
-        ../dev/lib/swscale.lib
+INCLUDEPATH+=$$PWD/ffmpeglib/include
+LIBS += $$PWD/ffmpeglib/lib/avcodec.lib\
+        $$PWD/ffmpeglib/lib/avdevice.lib\
+        $$PWD/ffmpeglib/lib/avfilter.lib\
+        $$PWD/ffmpeglib/lib/avformat.lib\
+        $$PWD/ffmpeglib/lib/avutil.lib\
+        $$PWD/ffmpeglib/lib/postproc.lib\
+        $$PWD/ffmpeglib/lib/swresample.lib\
+        $$PWD/ffmpeglib/lib/swscale.lib
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
