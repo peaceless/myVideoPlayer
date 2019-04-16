@@ -26,9 +26,11 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    xffmpeg.cpp
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    xffmpeg.h
 FORMS += \
         mainwindow.ui
 INCLUDEPATH+=$$PWD/ffmpeglib/include
