@@ -24,8 +24,9 @@ public:
     AVFrame *decode(const AVPacket *pkt);
     AVFrame *yuv = nullptr;
     unsigned int video_stream = 0;
-    bool torgb(const AVFrame *yuv,char *out,int outwidth,int outheight);
+    bool torgb(const AVFrame *yuv,uint8_t  out[],int outwidth,int outheight);
     SwsContext *sct = nullptr;//转码器上下文
+    AVCodecContext *codec_ctx = nullptr;
 protected:
     char errorbuff[1024];//打开时产生的错误信息
     xffmpeg();

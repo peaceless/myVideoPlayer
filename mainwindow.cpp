@@ -6,11 +6,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-  //  qDebug() << avcodec_configuration();
-  //  unsigned version = avcodec_version();
-    //QString ch = QString::number(version,10);
-    //qDebug() << "version:" << version;
-}
+ }
 
 MainWindow::~MainWindow()
 {

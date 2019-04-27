@@ -32,15 +32,23 @@ bool xffmpeg::open(const char *path)
                 qDebug() << "video code not find";
                 return false;
             }
-            AVCodecContext *codec_ctx = avcodec_alloc_context3(codec);//需要使用avcodec_free_context释放
+            codec_ctx = avcodec_alloc_context3(codec);//需要使用avcodec_free_context释放
             avcodec_parameters_to_context(codec_ctx,avcp);//从avcodecparameters复制到avcodeccontext
             //视频的帧率应该从AVStream结构的avg_frame_rate成员获取，而非a'vCOdecContext结构体
             //如果avg_frame_rate为{0，1}，再尝试从r_frame_rate成员获取
             int err = avcodec_open2(codec_ctx,codec,nullptr);
+            if (err != 0) { //未打开解码器
+                mutex.unlock();
+                char buf[1024] = {0};
+                av_strerror(err,buf,sizeof(buf));
+                qDebug() << buf;
+                return false;
+            }
+            qDebug() << "open codec success";
         }
     }
     total_sec = avfc->duration / (AV_TIME_BASE);
-    qDebug() << "file total seconds is " << total_sec /60 <<"--" << total_sec % 60;
+    qDebug() << "file total seconds is " << total_sec /60 <<"-" << total_sec % 60;
     mutex.unlock();
     return true;
 }
@@ -88,12 +96,17 @@ AVFrame * xffmpeg::decode(const AVPacket *pkt)
     if (yuv == nullptr) {//申请解码的对象空间
         yuv = av_frame_alloc();
     }
-    int re = avcodec_send_packet(avfc->streams[pkt->stream_index]->codec,pkt);
+    qDebug() << "right here";
+//    AVCodecParameters *avcp = avfc->streams[pkt->stream_index]->codecpar;
+//    AVCodecContext *avcc = avcodec_alloc_context3(nullptr);
+//    avcodec_parameters_to_context(avcc,avcp);
+    int re = avcodec_send_packet(codec_ctx,pkt);
     if (re != 0) {
         mutex.unlock();
+        qDebug() << "send_packet wrong!!" << re;
         return nullptr;
     }
-    re = avcodec_receive_frame(avfc->streams[pkt->stream_index]->codec,yuv);//解码pkt
+    re = avcodec_receive_frame(codec_ctx,yuv);//解码pkt
     if (re != 0) {
         mutex.unlock();
         return nullptr;
@@ -102,12 +115,38 @@ AVFrame * xffmpeg::decode(const AVPacket *pkt)
     return yuv;
 }
 
-bool xffmpeg::torgb(const AVFrame *yuv, char *out, int outwidth, int outheight)
+bool xffmpeg::torgb(const AVFrame *yuv, uint8_t out[], int outwidth, int outheight)
 {
     mutex.lock();
     if (!avfc) {//未打开视频文件
         mutex.unlock();
         return false;
     }
-    AVCodecParameters *videoCtx = avfc->streams[this->video_stream]->codecpar;
+    sct = sws_getCachedContext(sct,yuv->width,//初始化一个swscontext
+                               yuv->height,
+                               static_cast<AVPixelFormat>(yuv->format),//输入像素格式
+                               outwidth,outheight,
+                               AV_PIX_FMT_BGRA,//输出像素格式
+                               SWS_FAST_BILINEAR,//转码的算法
+                               nullptr,nullptr,nullptr);
+    if (!sct) {
+        mutex.unlock();
+        return false;
+    }
+    uint8_t * data[AV_NUM_DATA_POINTERS] = {nullptr};
+    data[0] = out;//第一位输出RGB
+    int line_size[AV_NUM_DATA_POINTERS] = {0};
+
+    line_size[0] = outwidth * 4;//一行的宽度，32位4个字节
+    int h = sws_scale(sct,yuv->data,//当前处理区域的每个通道数据指针
+                      yuv->linesize,//每个通道行字节数
+                      0,yuv->height,//原视频高度
+                      data,//输出：：的每个通道数据指针
+                      line_size//每个通道行字节数
+                      );//开始转码
+    if (h > 0) {
+        qDebug() << "h is " << h;
+    }
+    mutex.unlock();
+    return true;
 }

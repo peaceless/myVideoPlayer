@@ -27,10 +27,13 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    xffmpeg.cpp
+    xffmpeg.cpp \
+    video_widget.cpp
 HEADERS += \
         mainwindow.h \
-    xffmpeg.h
+    xffmpeg.h \
+    video_widget.h \
+    video_widget.h
 FORMS += \
         mainwindow.ui
 INCLUDEPATH+=$$PWD/ffmpeglib/include
