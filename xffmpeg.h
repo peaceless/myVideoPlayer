@@ -13,7 +13,7 @@ public:
         static xffmpeg ff;
         return &ff;
     }
-    bool open(const char *path);//打开视频文件open file
+    long long open(const char *path);//打开视频文件open file
     void close();//关闭文件close file
     std::string get_error();//获取错误信息
     virtual  ~xffmpeg();
@@ -27,6 +27,10 @@ public:
     bool torgb(const AVFrame *yuv,uint8_t  out[],int outwidth,int outheight);
     SwsContext *sct = nullptr;//转码器上下文
     AVCodecContext *codec_ctx = nullptr;
+    double fps ={};//帧率
+    long long pts = 0;
+    bool seek(float pos);
+    bool isPlay = true;
 protected:
     char errorbuff[1024];//打开时产生的错误信息
     xffmpeg();

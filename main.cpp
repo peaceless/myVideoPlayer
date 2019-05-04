@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
     MainWindow w;
-    video_widget v_w;
-    v_w.show();
+    //video_widget v_w;
+    //v_w.show();
     w.show();
 
     return a.exec();

@@ -28,12 +28,16 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     xffmpeg.cpp \
-    video_widget.cpp
+    video_widget.cpp \
+    xvideothread.cpp \
+    xslider.cpp
 HEADERS += \
         mainwindow.h \
     xffmpeg.h \
     video_widget.h \
-    video_widget.h
+    video_widget.h \
+    xvideothread.h \
+    xslider.h
 FORMS += \
         mainwindow.ui
 INCLUDEPATH+=$$PWD/ffmpeglib/include
@@ -49,3 +53,6 @@ LIBS += $$PWD/ffmpeglib/lib/avcodec.lib\
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    stop.qrc

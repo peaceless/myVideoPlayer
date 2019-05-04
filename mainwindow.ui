@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>408</width>
     <height>300</height>
    </rect>
   </property>
@@ -14,14 +14,83 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="video_widget" name="video_widget">
+   <widget class="video_widget" name="vw">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
+      <x>0</x>
+      <y>0</y>
       <width>300</width>
       <height>200</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="stopButton">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>170</y>
+      <width>21</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="stop.qrc">
+      <normaloff>:/new/icon/icon/timg.jpg</normaloff>:/new/icon/icon/timg.jpg</iconset>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="filePlay">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>170</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>file</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="playTime">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>200</y>
+      <width>41</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>000:00/</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="totalTime">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>200</y>
+      <width>54</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>000:00</string>
+    </property>
+   </widget>
+   <widget class="xslider" name="playSlider">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>170</y>
+      <width>160</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
     </property>
    </widget>
   </widget>
@@ -30,7 +99,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>400</width>
+     <width>408</width>
      <height>23</height>
     </rect>
    </property>
@@ -51,8 +120,88 @@
    <class>video_widget</class>
    <extends>QOpenGLWidget</extends>
    <header location="global">video_widget.h</header>
+   <slots>
+    <slot>pause()</slot>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>xslider</class>
+   <extends>QSlider</extends>
+   <header location="global">xslider.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
- <connections/>
+ <resources>
+  <include location="stop.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>filePlay</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>open()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>247</x>
+     <y>216</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>175</x>
+     <y>-5</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>playSlider</sender>
+   <signal>sliderPressed()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>sliderPressed()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>33</x>
+     <y>221</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>33</x>
+     <y>260</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>playSlider</sender>
+   <signal>sliderReleased()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>sliderReleased()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>111</x>
+     <y>221</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>110</x>
+     <y>266</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>stopButton</sender>
+   <signal>clicked()</signal>
+   <receiver>vw</receiver>
+   <slot>pause()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>180</x>
+     <y>218</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>203</x>
+     <y>234</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>open()</slot>
+  <slot>sliderPressed()</slot>
+  <slot>sliderReleased()</slot>
+ </slots>
 </ui>

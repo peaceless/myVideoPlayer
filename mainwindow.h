@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QDebug>
+#include <QLabel>
 using namespace std;
 extern "C"
 {
@@ -25,9 +26,15 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
+    void resizeEvent(QResizeEvent *event);
+public slots:
+    void open();//用于相应打开文件的按钮
+    void sliderPressed();
+    void sliderReleased();
 private:
     Ui::MainWindow *ui;
+    void timerEvent(QTimerEvent *event);
+    bool isPressedSlider = false;
 };
 
 #endif // MAINWINDOW_H
