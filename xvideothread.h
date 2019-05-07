@@ -17,7 +17,6 @@ public:
     void run();//线程的运行
     xvideoThread();
     ~xvideoThread();
-    AVFrame *yuv = nullptr;
 };
 
 #endif // XVIDEOTHREAD_H

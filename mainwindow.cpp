@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "xffmpeg.h"
+#include "xaudio.h"
 #include <QFileDialog>
 #include <QMessageBox>
 MainWindow::MainWindow(QWidget *parent) :
@@ -35,11 +36,16 @@ void MainWindow::open()
     long long totalMs = xffmpeg::Get()->open(name.toLocal8Bit());
     if (totalMs <= 0) {
         QMessageBox::information(this,"err","file open failed");
+        return ;
     }
+    xaudio::get()->sampleRate = xffmpeg::Get()->sampleRate;
+    xaudio::get()->channel = xffmpeg::Get()->channel;
+    xaudio::get()->sampleSize = 16;
+    xaudio::get()->start();
     char buf[1024] = {0};//用于存放总时间
     long long min = (totalMs)/60;
     long long sec = (totalMs)%60;
-    sprintf(buf,"%03lld:%02lld",min,sec);//存入buf中
+    sprintf(buf,"/%03lld:%02lld",min,sec);//存入buf中
     ui->totalTime->setText(buf);
 }
 

@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui \
+                 multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -30,14 +31,16 @@ SOURCES += \
     xffmpeg.cpp \
     video_widget.cpp \
     xvideothread.cpp \
-    xslider.cpp
+    xslider.cpp \
+    xaudio.cpp
 HEADERS += \
         mainwindow.h \
     xffmpeg.h \
     video_widget.h \
     video_widget.h \
     xvideothread.h \
-    xslider.h
+    xslider.h \
+    xaudio.h
 FORMS += \
         mainwindow.ui
 INCLUDEPATH+=$$PWD/ffmpeglib/include

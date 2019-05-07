@@ -28,10 +28,10 @@ void video_widget::paintEvent(QPaintEvent *event)
 //    if (pkt.size == 0) return ;
 //    AVFrame *yuv = xffmpeg::Get()->decode(&pkt);//解码读取到的视频帧
 //    av_packet_unref(&pkt);//解码成功后释放空间
-    if (xvideoThread::get()->yuv == nullptr) return ;
+    if (xffmpeg::Get()->yuv == nullptr) return ;
     //将解码后的视频帧转化为rgb
-    xffmpeg::Get()->torgb(xvideoThread::get()->yuv,image->bits(),width(),height());
-    //qDebug() << "yuv not null";
+    xffmpeg::Get()->torgb(xffmpeg::Get()->yuv,image->bits(),width(),height());
+    qDebug() << "yuv not null";
     QPainter painter;
     painter.begin(this);
     painter.drawImage(QPoint(0,0),*image);//绘制ffmpeg生成的图像

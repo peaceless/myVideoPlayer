@@ -64,7 +64,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>000:00/</string>
+     <string>000:00</string>
     </property>
    </widget>
    <widget class="QLabel" name="totalTime">
@@ -77,7 +77,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>000:00</string>
+     <string>/000:00</string>
     </property>
    </widget>
    <widget class="xslider" name="playSlider">

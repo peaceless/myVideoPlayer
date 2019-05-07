@@ -25,6 +25,7 @@ long long xffmpeg::open(const char *path)
    //解码器
     for (unsigned int i = 0;i < avfc->nb_streams;i++) {
         AVCodecParameters *avcp = avfc->streams[i]->codecpar;//解码上下文
+        qDebug() << "streams number "<< i;
         if (avcp->codec_type == AVMEDIA_TYPE_VIDEO) {//判断文件是否为视频
             video_stream = i;
             fps = r2d(avfc->streams[i]->avg_frame_rate);
@@ -34,7 +35,7 @@ long long xffmpeg::open(const char *path)
                 qDebug() << "video code not find";
                 return false;
             }
-            codec_ctx = avcodec_alloc_context3(codec);//需要使用avcodec_free_context释放
+            codec_ctx = avcodec_alloc_context3(nullptr);//需要使用avcodec_free_context释放
             avcodec_parameters_to_context(codec_ctx,avcp);//从avcodecparameters复制到avcodeccontext
             //视频的帧率应该从AVStream结构的avg_frame_rate成员获取，而非avCOdecContext结构体
             //如果avg_frame_rate为{0，1}，再尝试从r_frame_rate成员获取
@@ -47,6 +48,31 @@ long long xffmpeg::open(const char *path)
                 return -1;
             }
             qDebug() << "open codec success";
+        }else if(avcp->codec_type == AVMEDIA_TYPE_AUDIO) {//若为音频流
+            qDebug() << "audio process " << i;
+            audio_stream = i;//音频流编号
+            AVCodec *codec = avcodec_find_decoder(avcp->codec_id);
+            codec_ctx_audio = avcodec_alloc_context3(codec);
+            avcodec_parameters_to_context(codec_ctx_audio,avcp);
+            qDebug() << codec_ctx_audio->codec_id;
+            if (avcodec_open2(codec_ctx_audio,codec,nullptr) < 0) {
+                mutex.unlock();
+                return 0;
+            }
+            this->sampleRate = avcp->sample_rate;
+            this->channel = avcp->channels;
+            switch(avcp->format) {
+            case AV_SAMPLE_FMT_S16:
+                this->sampleSize = 16;
+                break;
+            case AV_SAMPLE_FMT_S32:
+                this->sampleSize = 32;
+                break;
+            default:
+                break;
+            }
+            qDebug() << "audio sampleRate :" << sampleRate <<"sampleSize :" <<sampleSize
+                     << "channel:" <<channel;
         }
     }
     total_sec = avfc->duration / (AV_TIME_BASE);
@@ -91,33 +117,44 @@ AVPacket xffmpeg::read()
     return pkt;
 }
 
-AVFrame * xffmpeg::decode(const AVPacket *pkt)
+long long xffmpeg::decode(const AVPacket *pkt)
 {
     mutex.lock();
     if (!avfc) {//若未打开视频
         mutex.unlock();
-        return nullptr;
+        return NULL;
     }
     if (yuv == nullptr) {//申请解码的对象空间
         yuv = av_frame_alloc();
     }
+    if (pcm == nullptr) {
+        pcm =av_frame_alloc();
+    }
+    AVFrame *frame = yuv;
+    if (pkt->stream_index == static_cast<int>(audio_stream)){
+        frame = pcm;
+    }
+    int re = avcodec_send_packet(codec_ctx,pkt);
 //    AVCodecParameters *avcp = avfc->streams[pkt->stream_index]->codecpar;
 //    AVCodecContext *avcc = avcodec_alloc_context3(nullptr);
 //    avcodec_parameters_to_context(avcc,avcp);
-    int re = avcodec_send_packet(codec_ctx,pkt);
     if (re != 0) {
         mutex.unlock();
         qDebug() << "send_packet wrong!!" << re;
-        return nullptr;
+        return NULL;
     }
-    re = avcodec_receive_frame(codec_ctx,yuv);//解码pkt
+    re = avcodec_receive_frame(codec_ctx,frame);//解码pkt
     if (re != 0) {
+    qDebug() << re << "re is big data";
         mutex.unlock();
-        return nullptr;
+        return NULL;
     }
     mutex.unlock();
-    pts = static_cast<long long>(yuv->pts*r2d(avfc->streams[pkt->stream_index]->time_base));
-    return yuv;
+    long long p = static_cast<long long>(yuv->pts*r2d(avfc->streams[pkt->stream_index]->time_base));
+    if (pkt->stream_index == static_cast<int>(audio_stream)){
+        this->pts = p;
+    }
+    return p;
 }
 
 bool xffmpeg::torgb(const AVFrame *yuv, uint8_t out[], int outwidth, int outheight)
@@ -151,6 +188,42 @@ bool xffmpeg::torgb(const AVFrame *yuv, uint8_t out[], int outwidth, int outheig
                       );//开始转码
     mutex.unlock();
     return true;
+}
+
+int xffmpeg::toPcm(char *out)
+{
+    mutex.lock();
+    if (!avfc || !pcm || !out) {
+        mutex.unlock();
+        return 0;
+    }
+    AVCodecParameters *avcp = avfc->streams[audio_stream]->codecpar;
+    if (aCtx == nullptr) {
+        aCtx = swr_alloc();
+        swr_alloc_set_opts(aCtx,static_cast<int64_t>(avcp->channel_layout),
+                           AV_SAMPLE_FMT_S16,
+                           avcp->sample_rate,
+                           avcp->channels,
+                           static_cast<AVSampleFormat>(avcp->format),
+                           avcp->sample_rate,0,nullptr);
+        swr_init(aCtx);
+    }
+    uint8_t *data[2];
+    data[0] = (uint8_t *)out;
+    int len = swr_convert(aCtx,
+                          data,
+                          10000,
+                          (const uint8_t **)pcm->data,
+                          pcm->nb_samples);
+    if (len <= 0){
+        mutex.unlock();
+        qDebug() << len << "si nel";
+        return 0;
+    }
+    int outsize = av_samples_get_buffer_size(nullptr,avcp->channels,pcm->nb_samples,
+                                             AV_SAMPLE_FMT_S16,0);
+    mutex.unlock();
+    return outsize;
 }
 
 bool xffmpeg::seek(float pos)

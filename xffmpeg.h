@@ -5,6 +5,7 @@
 extern "C" {
     #include <libavformat/avformat.h>
     #include <libswscale/swscale.h>
+    #include <libswresample/swresample.h>
 }
 class xffmpeg
 {
@@ -21,16 +22,25 @@ public:
 
 
     AVPacket read();
-    AVFrame *decode(const AVPacket *pkt);
+    long long decode(const AVPacket *pkt);
     AVFrame *yuv = nullptr;
-    unsigned int video_stream = 0;
+    AVFrame *pcm = nullptr;
+    unsigned int video_stream = 999;
+    unsigned int audio_stream = 999;
     bool torgb(const AVFrame *yuv,uint8_t  out[],int outwidth,int outheight);
     SwsContext *sct = nullptr;//转码器上下文
     AVCodecContext *codec_ctx = nullptr;
+    AVCodecContext *codec_ctx_audio = nullptr;
     double fps ={};//帧率
     long long pts = 0;
     bool seek(float pos);
     bool isPlay = true;
+
+    int sampleRate = 48000;
+    int channel = 2;
+    int sampleSize = 16;
+    int toPcm(char *out);
+    SwrContext *aCtx = nullptr;
 protected:
     char errorbuff[1024];//打开时产生的错误信息
     xffmpeg();
