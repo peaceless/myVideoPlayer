@@ -23,6 +23,7 @@ public:
 
     AVPacket read();
     long long decode(const AVPacket *pkt);
+    AVFrame *decode1(const AVPacket *pkt);
     AVFrame *yuv = nullptr;
     AVFrame *pcm = nullptr;
     unsigned int video_stream = 999;
@@ -39,7 +40,7 @@ public:
     int sampleRate = 48000;
     int channel = 2;
     int sampleSize = 16;
-    int toPcm(char *out);
+    int toPcm(char out[]);
     SwrContext *aCtx = nullptr;
 protected:
     char errorbuff[1024];//打开时产生的错误信息
