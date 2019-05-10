@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "xffmpeg.h"
 #include "xaudio.h"
+#include "xvideoThread.h"
 #include <QFileDialog>
 #include <QMessageBox>
 MainWindow::MainWindow(QWidget *parent) :
@@ -58,6 +59,7 @@ void MainWindow::sliderReleased()
     isPressedSlider = false;
     float pos = 0;
     pos = static_cast<float>(ui->playSlider->value() / static_cast<float>(ui->playSlider->maximum() + 1));
+    xvideoThread::get()->flush = true;
     xffmpeg::Get()->seek(pos);
 }
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -72,5 +74,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 }
 MainWindow::~MainWindow()
 {
+    xvideoThread::get()->isexit = true;
     delete ui;
 }

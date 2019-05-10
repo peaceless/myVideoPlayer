@@ -23,6 +23,12 @@ long long xffmpeg::open(const char *path)
         qDebug() << "open file failed :" << path << "::" << errorbuff;//输出错误信息
         return false;
     }
+    re = avformat_find_stream_info(avfc,nullptr);
+    if (re < 0) {
+        qDebug() << "find stream info failed";
+        mutex.unlock();
+        return false;
+    }
    //解码器
     for (unsigned int i = 0;i < avfc->nb_streams;i++) {
         AVCodecParameters *avcp = avfc->streams[i]->codecpar;//解码上下文
@@ -64,7 +70,7 @@ long long xffmpeg::open(const char *path)
                 qDebug() << "decoder failed";
                 return -1;
             }
-            qDebug() << "open audio decoder success";
+            qDebug() << "open audio decoder success" << codec_ctx_audio->codec_id;
             this->sampleRate = codec_ctx_audio->sample_rate;
             this->channel = codec_ctx_audio->channels;
             switch(codec_ctx_audio->sample_fmt) {
@@ -128,33 +134,35 @@ AVPacket xffmpeg::read()
     return pkt;
 }
 
-AVFrame * xffmpeg::decode1(const AVPacket *pkt)
+long long xffmpeg::decode1(const AVPacket *pkt)
 {
     mutex.lock();
+    long long time = -1;
     if(!avfc) {
         mutex.unlock();
-        return nullptr;
+        return -1;
     }
-    AVFrame * temp = av_frame_alloc();
-    bool need_new = false;
+    //AVFrame * temp = av_frame_alloc();
+    if (pcm == nullptr) {
+        pcm = av_frame_alloc();
+    }
+    bool need_new;
     int re = avcodec_send_packet(codec_ctx_audio,pkt);
     if (re != 0){
         qDebug() << "send audio packet wrong";
         mutex.unlock();
-        return nullptr;
+        return -1;
     }
     while(1) {
         need_new = false;
         qDebug() << "try to receive a audio frame";
-        int re = avcodec_receive_frame(codec_ctx_audio,temp);
+        int re = avcodec_receive_frame(codec_ctx_audio,pcm);
         if (re != 0){
-            //qDebug() << "avcodec_receive audio failed" << re;
             if (re == AVERROR(EAGAIN)) {
                 need_new = true;
                 break;
             }
         }else {
-            pcm = temp;
             qDebug() << "get a audio frame" <<pcm << pcm->channels <<
                         pcm->nb_samples;
             int bufsize = av_samples_get_buffer_size(nullptr,xffmpeg::Get()->pcm->channels,
@@ -166,49 +174,45 @@ AVFrame * xffmpeg::decode1(const AVPacket *pkt)
                  char *buf = new char[bufsize];
              int len = toPcm(buf);
              xaudio::get()->write(buf,len);
+             time = static_cast<long long>(pcm->pts * r2d(avfc->streams[pkt->stream_index]->time_base));
+             qDebug() << "audio time is" << time;
              delete[] buf;
              }
             continue;
         }
     }
     mutex.unlock();
-    return nullptr;
+    return time;
+}
+int64_t xffmpeg::getPts(const AVPacket *pkt)
+{
+    return  static_cast<int64_t>(pkt->pts * r2d(avfc->streams[pkt->stream_index]->time_base));
 }
 long long xffmpeg::decode(const AVPacket *pkt)
 {
     mutex.lock();
     if (!avfc) {//若未打开视频
         mutex.unlock();
-        return NULL;
+        return -1;
     }
     if (yuv == nullptr) {//申请解码的对象空间
         yuv = av_frame_alloc();
     }
-    if (pcm == nullptr) {
-        pcm =av_frame_alloc();
-    }
-    AVFrame *frame = yuv;
-    if (pkt->stream_index == static_cast<int>(audio_stream)){
-        frame = pcm;
-        qDebug() << "frame is pcm now";
-    }
+    qDebug() << codec_ctx->codec_id << "codec_id is ";
+    qDebug() << "pkt size is " << pkt->size;
     int re = avcodec_send_packet(codec_ctx,pkt);
     if (re != 0) {
         mutex.unlock();
         qDebug() << "send_packet wrong!!" << re;
-        return NULL;
+        return -1;
     }
-    re = avcodec_receive_frame(codec_ctx,frame);//解码pkt
+    re = avcodec_receive_frame(codec_ctx,yuv);//解码pkt
     if (re != 0) {
         mutex.unlock();
-        return NULL;
+        return -1;
     }
     mutex.unlock();
-    long long p = static_cast<long long>(frame->pts*r2d(avfc->streams[pkt->stream_index]->time_base));
-    if (p < 0) p = 0;
-    if (pkt->stream_index == static_cast<int>(audio_stream)){
-        this->pts = p;
-    }
+    long long p = static_cast<long long>(yuv->pts*r2d(avfc->streams[pkt->stream_index]->time_base));
     return p;
 }
 
@@ -247,10 +251,8 @@ bool xffmpeg::torgb(const AVFrame *yuv, uint8_t out[], int outwidth, int outheig
 
 int xffmpeg::toPcm(char out[])
 {
-//    mutex.lock();
     qDebug() << "to pacm";
     if (!avfc || !pcm || !out) {
-//        mutex.unlock();
         return 0;
     }
     if (aCtx == nullptr) {
@@ -272,13 +274,11 @@ int xffmpeg::toPcm(char out[])
                           (const uint8_t **)pcm->data,
                           pcm->nb_samples);
     if (len <= 0){
-//        mutex.unlock();
         qDebug() << len << "si nel";
         return 0;
     }
     int outsize = av_samples_get_buffer_size(nullptr,codec_ctx_audio->channels,pcm->nb_samples,
                                              AV_SAMPLE_FMT_S16,0);
-//    mutex.unlock();
     return outsize;
 }
 

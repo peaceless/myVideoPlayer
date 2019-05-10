@@ -23,7 +23,7 @@ public:
 
     AVPacket read();
     long long decode(const AVPacket *pkt);
-    AVFrame *decode1(const AVPacket *pkt);
+    long long decode1(const AVPacket *pkt);
     AVFrame *yuv = nullptr;
     AVFrame *pcm = nullptr;
     unsigned int video_stream = 999;
@@ -36,6 +36,7 @@ public:
     long long pts = 0;
     bool seek(float pos);
     bool isPlay = true;
+    int64_t getPts(const AVPacket * pkt);
 
     int sampleRate = 48000;
     int channel = 2;

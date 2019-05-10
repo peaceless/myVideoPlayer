@@ -14,6 +14,8 @@ public:
         static xvideoThread vt;
         return &vt;
     }
+    bool isexit = false;
+    bool flush = false;
     void run();//线程的运行
     xvideoThread();
     ~xvideoThread();

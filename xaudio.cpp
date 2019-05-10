@@ -19,7 +19,7 @@ bool xaudio::start()
 {
     stop();
     mutex.lock();
-    QAudioOutput *out;//播放音频
+//    QAudioOutput *out;//播放音频
     QAudioFormat fmt;//设置音频输出格式
     fmt.setSampleRate(48000);//美妙采样lv
     fmt.setSampleSize(16);//声音样本的大小

@@ -1,6 +1,6 @@
 #include "video_widget.h"
 #include "xffmpeg.h"
-#include "xvideothread.h"
+#include "xvideoThread.h"
 #include <QDebug>
 void video_widget::paintEvent(QPaintEvent *event)
 {

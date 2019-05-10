@@ -30,17 +30,17 @@ SOURCES += \
         mainwindow.cpp \
     xffmpeg.cpp \
     video_widget.cpp \
-    xvideothread.cpp \
     xslider.cpp \
-    xaudio.cpp
+    xaudio.cpp \
+    xvideoThread.cpp
 HEADERS += \
         mainwindow.h \
     xffmpeg.h \
     video_widget.h \
     video_widget.h \
-    xvideothread.h \
     xslider.h \
-    xaudio.h
+    xaudio.h \
+    xvideoThread.h
 FORMS += \
         mainwindow.ui
 INCLUDEPATH+=$$PWD/ffmpeglib/include
