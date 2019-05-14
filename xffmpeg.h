@@ -22,8 +22,8 @@ public:
 
 
     AVPacket read();
-    long long decode(const AVPacket *pkt);
-    long long decode1(const AVPacket *pkt);
+    double decode(const AVPacket *pkt);
+    double decode1(const AVPacket *pkt);
     AVFrame *yuv = nullptr;
     AVFrame *pcm = nullptr;
     unsigned int video_stream = 999;

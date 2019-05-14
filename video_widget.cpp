@@ -32,6 +32,7 @@ void video_widget::paintEvent(QPaintEvent *event)
 video_widget::video_widget(QWidget *parent) :QOpenGLWidget (parent)
 {
 //    xffmpeg::Get()->open("E:\\test\\fortest.mp4");
+    xffmpeg::Get()->open("rtmp://live.hkstv.hk.lxdns.com/live/hks");
     startTimer(10);//设置定时器
     xvideoThread::get()->start();
 }
