@@ -121,13 +121,21 @@ AVPacket xffmpeg::read()
 {
     AVPacket pkt;
     memset(&pkt,0,sizeof(AVPacket));
+    qDebug() << &pkt << "read in here" << sizeof(pkt);
+    av_packet_unref(&pkt);
+    qDebug() << "going to lock";
     mutex.lock();
+    qDebug() << "get lock";
     if (!avfc) {
         mutex.unlock();
+        qDebug() << "file not open";
         return pkt;
     }
+    qDebug() << "try to read a fraem";
     int err = av_read_frame(avfc,&pkt);
+    qDebug() << "read a frame";
     if (err != 0) { //读取视频失败
+        qDebug() << "read frame failed";
         av_strerror(err,errorbuff,sizeof (errorbuff));
     }
     mutex.unlock();
@@ -209,6 +217,7 @@ long long xffmpeg::decode(const AVPacket *pkt)
     re = avcodec_receive_frame(codec_ctx,yuv);//解码pkt
     if (re != 0) {
         mutex.unlock();
+        qDebug() << "receive video frame wrong CODDE " << re;
         return -1;
     }
     mutex.unlock();
@@ -219,7 +228,14 @@ long long xffmpeg::decode(const AVPacket *pkt)
 bool xffmpeg::torgb(const AVFrame *yuv, uint8_t out[], int outwidth, int outheight)
 {
     mutex.lock();
+    qDebug() << "rgb going";
     if (!avfc) {//未打开视频文件
+        mutex.unlock();
+        return false;
+    }
+    qDebug() << "going to cached context" << sct;
+    if (!yuv->width || !yuv->height) {
+        qDebug() << "yuv not right";
         mutex.unlock();
         return false;
     }
@@ -232,8 +248,10 @@ bool xffmpeg::torgb(const AVFrame *yuv, uint8_t out[], int outwidth, int outheig
                                nullptr,nullptr,nullptr);
     if (!sct) {
         mutex.unlock();
+        qDebug() << "cachedContext failed";
         return false;
     }
+    qDebug() << "cached success";
     uint8_t * data[AV_NUM_DATA_POINTERS] = {nullptr};
     data[0] = out;//第一位输出RGB
     int line_size[AV_NUM_DATA_POINTERS] = {0};
@@ -246,6 +264,7 @@ bool xffmpeg::torgb(const AVFrame *yuv, uint8_t out[], int outwidth, int outheig
                       line_size//每个通道行字节数
                       );//开始转码
     mutex.unlock();
+    qDebug() << "recode success";
     return true;
 }
 
