@@ -1,5 +1,6 @@
 #include "video_widget.h"
 #include "xffmpeg.h"
+#include "xaudio.h"
 #include "xvideoThread.h"
 #include <QDebug>
 void video_widget::paintEvent(QPaintEvent *event)
@@ -22,7 +23,7 @@ void video_widget::paintEvent(QPaintEvent *event)
     if (xffmpeg::Get()->yuv == nullptr) return ;
     //将解码后的视频帧转化为rgb
     xffmpeg::Get()->torgb(xffmpeg::Get()->yuv,image->bits(),width(),height());
-    qDebug() << "yuv not null" << xffmpeg::Get()->yuv->pts;
+//    qDebug() << "yuv not null" << xffmpeg::Get()->yuv->pts;
     QPainter painter;
     painter.begin(this);
     painter.drawImage(QPoint(0,0),*image);//绘制ffmpeg生成的图像
@@ -31,8 +32,14 @@ void video_widget::paintEvent(QPaintEvent *event)
 
 video_widget::video_widget(QWidget *parent) :QOpenGLWidget (parent)
 {
-//    xffmpeg::Get()->open("E:\\test\\fortest.mp4");
-    xffmpeg::Get()->open("rtmp://live.hkstv.hk.lxdns.com/live/hks");
+    xffmpeg::Get()->open("http://www.w3school.com.cn/i/movie.mp4");
+    xaudio::get()->sampleRate = xffmpeg::Get()->sampleRate;
+    xaudio::get()->channel = xffmpeg::Get()->channel;
+    xaudio::get()->sampleSize = 16;
+    xaudio::get()->start();
+//    qDebug() << "ready to open";
+//    xffmpeg::Get()->open("http://www.w3school.com.cn/i/movie.mp4");
+//    qDebug() << "open success";
     startTimer(10);//设置定时器
     xvideoThread::get()->start();
 }
@@ -45,5 +52,6 @@ void video_widget::pause()
 {
     isPlay = !isPlay;
     xffmpeg::Get()->isPlay = isPlay;
+    xaudio::get()->play(isPlay);
     qDebug() << "isplayed button pressed!!";
 }

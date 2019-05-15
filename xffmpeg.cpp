@@ -217,6 +217,7 @@ double xffmpeg::decode(const AVPacket *pkt)
     }
     mutex.unlock();
     double p = yuv->pts*av_q2d(avfc->streams[pkt->stream_index]->time_base);
+    qDebug() << "video time is " << p;
     return p;
 }
 

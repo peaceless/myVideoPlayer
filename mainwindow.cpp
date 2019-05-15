@@ -31,7 +31,7 @@ void MainWindow::timerEvent(QTimerEvent *event)
 }
 void MainWindow::open()
 {
-    QString name = QFileDialog::getOpenFileName(this,QString::fromLocal8Bit("选择视频文件"));
+    QString name = QFileDialog::getOpenFileName(this,QString::fromUtf8("选择视频文件"));
     if (name.isEmpty()) {return ;}
     this->setWindowTitle(name);//设置窗口标题
     long long totalMs = xffmpeg::Get()->open(name.toLocal8Bit());
@@ -43,6 +43,7 @@ void MainWindow::open()
     xaudio::get()->channel = xffmpeg::Get()->channel;
     xaudio::get()->sampleSize = 16;
     xaudio::get()->start();
+    xvideoThread::get()->start();
     char buf[1024] = {0};//用于存放总时间
     long long min = (totalMs)/60;
     long long sec = (totalMs)%60;
@@ -75,5 +76,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 MainWindow::~MainWindow()
 {
     xvideoThread::get()->isexit = true;
+    //xaudio::get()->stop();
     delete ui;
 }
